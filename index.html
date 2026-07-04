@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ODFlow｜社團 ODF 文件工作台</title>
+  <meta name="description" content="ODFlow：台灣學生社團 ODF 文件工作台，提供 ODT/ODS 範本下載、生成文件預覽與社團評鑑整理。" />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">🏫</div>
+        <div>
+          <h1>ODFlow</h1>
+          <p>ODF Workbench</p>
+        </div>
+      </div>
+      <nav class="nav" aria-label="主選單">
+        <button data-page="home" class="nav-item active"><span>🏠</span>首頁</button>
+        <button data-page="dashboard" class="nav-item"><span>📊</span>儀表板</button>
+        <button data-page="templates" class="nav-item"><span>📚</span>空白範本</button>
+        <button data-page="generate" class="nav-item"><span>📝</span>生成文件</button>
+        <button data-page="files" class="nav-item"><span>🗂️</span>檔案庫</button>
+        <button data-page="evaluation" class="nav-item"><span>📦</span>社團評鑑</button>
+        <button data-page="settings" class="nav-item"><span>⚙️</span>社團設定</button>
+      </nav>
+      <div class="sidebar-note">
+        <strong>Static Demo</strong>
+        <span>可部署到 GitHub Pages / Cloudflare Pages</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <span class="eyebrow">ODFLOW WEB DEMO</span>
+          <h2 id="pageTitle">首頁</h2>
+        </div>
+        <div class="status-pill">ODF-ready</div>
+      </div>
+      <section id="app" class="content"></section>
+    </main>
+  </div>
+  <script src="assets/data.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
