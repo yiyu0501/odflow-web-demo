@@ -1,44 +1,32 @@
-# ODFlow Static Web Demo
+# ODFlow Pro Static Web Demo v3
 
-這是一個可以直接部署到 GitHub Pages / Cloudflare Pages 的 ODFlow 靜態展示版。
+這是一個可以直接部署到 GitHub Pages / Cloudflare Pages 的 ODFlow Pro 靜態展示版。
 
-## 功能
+## v3 更新
 
-- 首頁
-- 儀表板
-- 空白範本中心
-- 生成文件表單與即時預覽
-- 檔案庫
-- 社團評鑑
-- 社團設定
-- 預先放入可下載的 ODT / ODS 範本檔案
+- 作者資訊修正為：簡廷宇（Eric）
+- 移除固定死的 72%、18 份文件等展示數字
+- 首頁、儀表板、社團評鑑、社團資料改成依目前資料即時計算
+- 可下載範本數量由 `assets/data.js` 的實際範本資料計算
+- 已建立文件會儲存在瀏覽器 localStorage
+- 點擊範本下載會留下下載紀錄
+- 社團評鑑進度依已建立文件與下載紀錄計算，初始狀態為 0%
 
-## 部署到 GitHub Pages
+## 部署到既有 GitHub Pages repo
 
-1. 建立新的 GitHub repo，例如 `odflow-web-demo`
-2. 把本資料夾全部檔案上傳到 repo 根目錄
-3. 到 repo 的 Settings → Pages
-4. Source 選 `Deploy from a branch`
-5. Branch 選 `main`，資料夾選 `/root`
-6. 等待 GitHub Pages 完成部署
-7. 連結會是：
+```bash
+cd "$HOME/Downloads"
+unzip -o ODFlow_static_github_pages_v3.zip
+cd "$HOME/Downloads/odflow_static_pages"
 
-```text
-https://你的帳號.github.io/odflow-web-demo/
+git status
+git add .
+git commit -m "Use real local data for ODFlow demo"
+git push origin main
 ```
 
-## 部署到 Cloudflare Pages
+網站網址：
 
-1. 到 Cloudflare Dashboard → Workers & Pages
-2. Create application → Pages
-3. Connect to GitHub
-4. 選擇這個 repo
-5. Framework preset 選 `None`
-6. Build command 留空
-7. Build output directory 留空或填 `/`
-8. Deploy
-
-## 注意
-
-這是靜態前端展示版，不依賴 Streamlit。  
-正式 ODT / ODS 動態生成可以在下一階段接 FastAPI 後端。
+```text
+https://yiyu0501.github.io/odflow-web-demo/
+```
