@@ -227,6 +227,14 @@ function kpi(title,value,sub){
   return `<section class="card kpi"><div class="label">${title}</div><strong>${value}</strong><p class="muted">${sub}</p></section>`;
 }
 
+function smallKpi(label, value, tone="red"){
+  return `<div class="mini-stat"><span class="mini-dot" style="background:${tone === "blue" ? "#60a5fa" : tone === "orange" ? "#f59e0b" : "#ff6b6b"}"></span><div class="mini-label">${label}</div><strong>${value} 份</strong></div>`;
+}
+
+function emptyBlock(icon,title,desc,button,page){
+  return `<div class="dash-empty"><div><div class="empty-icon">${icon}</div><h3>${title}</h3><p class="muted">${desc}</p><button class="btn secondary" data-go="${page}">${button} →</button></div></div>`;
+}
+
 function renderHome(){
   const stats = getStats();
   pageWrap(`
@@ -238,10 +246,9 @@ function renderHome(){
           <h1>一站式社團<br>文件管理站</h1>
           <p class="lead">空白範本、文件填寫、預覽確認與評鑑整理集中在同一個工作台，讓社團行政不再散落各處。</p>
           <div class="stat-row hero-metrics">
-            <div class="stat"><span>📄</span><div><strong>${stats.downloadable}</strong><span>本頁可下載範本</span></div></div>
-            <div class="stat"><span>📝</span><div><strong>${stats.docs}</strong><span>本頁已建立文件</span></div></div>
-            <div class="stat"><span>✅</span><div><strong>${stats.odfPercent}%</strong><span>本頁 ODF 格式</span></div></div>
-            <div class="stat"><span>📦</span><div><strong>${stats.evalPercent}%</strong><span>社團評鑑進度</span></div></div>
+            <div class="stat"><span>📄</span><div><strong>${stats.downloadable}</strong><span>可下載範本</span></div></div>
+            <div class="stat"><span>📝</span><div><strong>${stats.docs}</strong><span>已建立文件</span></div></div>
+            <div class="stat"><span>📦</span><div><strong>${stats.evalPercent}%</strong><span>評鑑進度</span></div></div>
           </div>
         </div>
       </section>
@@ -254,8 +261,7 @@ function renderHome(){
           <div class="assessment-list">
             <div class="assessment-item"><div>⚠️ 待補佐證</div><span>${stats.evalMissing} 份</span></div>
             <div class="assessment-item"><div>✅ 已完成項目</div><span>${stats.evalCompleted} / ${stats.evalTotal}</span></div>
-            <div class="assessment-item"><div>📄 本頁文件</div><span>${stats.docs} 份</span></div>
-            <div class="assessment-item"><div>🔎 原專案 ODF</div><span>${stats.remoteLoaded ? (stats.remoteError ? "讀取失敗" : `${stats.remoteOdfFiles} 個`) : "偵測中"}</span></div>
+            <div class="assessment-item"><div>📄 目前文件</div><span>${stats.docs} 份</span></div>
             <button class="btn coral" data-go="evaluation">前往社團評鑑 →</button>
           </div>
         </div>
@@ -274,24 +280,60 @@ function renderHome(){
 function renderDashboard(){
   const stats = getStats();
   const evalState = computeEvaluation();
+  const docs = getDocs();
+  const recentDocs = docs.slice(0, 3);
+  const reminders = evalState.items.filter(item => !item.done);
   pageWrap(`
     <div class="grid four">
-      ${kpi("目前文件",stats.docs,"已儲存到瀏覽器")}
-      ${kpi("空白範本",stats.downloadable,"可下載")}
-      ${kpi("待補文件",stats.evalMissing,"社團評鑑")}
-      ${kpi("完成率",`${stats.evalPercent}%`,"依目前資料計算")}
+      ${kpi("目前專案","0 個","依現有文件統計")}
+      ${kpi("本週新增文件",stats.docs,"目前資料庫文件數")}
+      ${kpi("待補文件",stats.evalMissing,"依評鑑缺件統計")}
+      ${kpi("未歸檔檔案",docs.filter(d => !d.category).length,"草稿或待確認文件")}
     </div>
+
     <div class="grid two" style="margin-top:20px">
-      <section class="card"><h2>近期任務</h2>
-        ${evalState.items.map(item => `<div class="file-row"><strong>${item.label}</strong><span>${item.status}</span><span>${item.category}</span><button class="btn secondary" data-go="${item.done ? "files" : (item.key==="income_expense_statement" ? "templates" : "generate")}">${item.done ? "查看" : (item.key==="income_expense_statement" ? "下載" : "建立")}</button></div>`).join("")}
+      <section class="card" style="min-height:330px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <h2>專案進度總覽</h2><span class="tag">目前資料</span>
+        </div>
+        ${docs.length ? docs.slice(0,4).map((doc,idx)=>`<div class="progress-row"><div class="progress-head"><span>${escapeHtml(doc.title)}</span><small>${doc.status || "草稿"}</small></div><div class="progress-bar"><i style="--value:${Math.min(100,35+idx*15)}%"></i></div></div>`).join("") : emptyBlock("📫","目前尚無專案","建立文件並歸入專案後，這裡會顯示進度。","建立文件","generate")}
       </section>
-      <section class="card"><h2>ODF 狀態</h2>
-        <p class="muted">這裡依目前範本清單、下載紀錄與已建立文件即時統計；不是固定展示數字。</p>
-        <div class="assessment-list" style="margin-top:18px">
-          <div class="assessment-item"><div>ODT 範本</div><span>${templates.filter(t=>t.fmt==="ODT").length} 份</span></div>
-          <div class="assessment-item"><div>ODS 表格</div><span>${templates.filter(t=>t.fmt==="ODS").length} 份</span></div>
-          <div class="assessment-item"><div>下載紀錄</div><span>${stats.downloads} 次</span></div>
-          <div class="assessment-item"><div>原專案 ODF 檔案</div><span>${stats.remoteLoaded ? (stats.remoteError ? "讀取失敗" : `${stats.remoteOdfFiles} 個`) : "偵測中"}</span></div>
+
+      <section class="card" style="min-height:330px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <h2>缺件 / 待補清單</h2><button class="btn secondary" data-go="evaluation" style="height:36px">查看全部</button>
+        </div>
+        <div class="mini-stat-grid">
+          ${smallKpi("核心文件缺", stats.evalMissing, "red")}
+          ${smallKpi("待審", 0, "orange")}
+          ${smallKpi("草稿", docs.length, "orange")}
+          ${smallKpi("已完成", evalState.completed, "blue")}
+        </div>
+        <h3 style="margin-top:20px">最緊急待補文件</h3>
+        ${reminders.length ? reminders.slice(0,4).map(item=>`<div class="reminder-row"><span class="reminder-dot"></span><div><strong>${item.label}</strong><small>${item.category}</small></div><span class="status-red">待補</span></div>`).join("") : `<p class="muted">目前沒有待補項目。</p>`}
+        <button class="btn secondary" data-go="evaluation" style="margin-top:14px;width:100%">查看完整待補清單 →</button>
+      </section>
+    </div>
+
+    <div class="grid three" style="margin-top:20px">
+      <section class="card" style="min-height:300px">
+        <div style="display:flex;justify-content:space-between;align-items:center"><h2>最近文件</h2><button class="btn secondary" data-go="files" style="height:36px">查看全部</button></div>
+        ${recentDocs.length ? recentDocs.map(doc=>`<div class="file-row"><strong>${escapeHtml(doc.title)}</strong><span>${doc.fmt}</span><span>${doc.category}</span><button class="btn secondary" data-go="files">查看</button></div>`).join("") : emptyBlock("📫","目前尚無文件","建立第一份文件後，最近文件會顯示在這裡。","建立文件","generate")}
+      </section>
+
+      <section class="card" style="min-height:300px"><h2>工作提醒</h2>
+        ${reminders.length ? reminders.concat(evalState.items).slice(0,4).map(item=>`<div class="reminder-row"><span class="reminder-dot"></span><div><strong>${item.label}</strong><small>社團評鑑</small></div><span class="status-red">${item.done ? "完成" : "待補"}</span></div>`).join("") : `<p class="muted">目前沒有提醒。</p>`}
+      </section>
+
+      <section class="card" style="min-height:300px"><h2>快捷操作</h2>
+        <div class="quick-list">
+          <button class="quick-link" data-go="templates"><span>📄 下載範本</span><span>›</span></button>
+          <button class="quick-link" data-go="generate"><span>📝 建立文件</span><span>›</span></button>
+          <button class="quick-link" data-go="files"><span>🗂️ 查看檔案庫</span><span>›</span></button>
+          <button class="quick-link" data-go="settings"><span>⚙️ 社團設定</span><span>›</span></button>
+        </div>
+        <div class="card summary-card" style="margin-top:18px;box-shadow:none;display:flex;align-items:center">
+          <span class="summary-check">✓</span><p class="muted"><strong>本週摘要</strong><br>目前資料庫共有 ${stats.docs} 份文件，草稿 ${docs.length} 份，待補 ${stats.evalMissing} 份。</p>
         </div>
       </section>
     </div>`);
