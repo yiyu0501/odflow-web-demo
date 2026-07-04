@@ -108,8 +108,8 @@ button{cursor:pointer}
   font-weight:950;
   border:1px solid #cfe1ff;
 }
-.club-row strong,.credit-card strong{display:block;font-size:14px;letter-spacing:-.02em}
-.club-row span,.credit-card span{display:block;color:var(--muted);font-size:12px;font-weight:750;margin-top:4px;line-height:1.35}
+.club-row strong{display:block;font-size:14px;letter-spacing:-.02em}
+.club-row span{display:block;color:var(--muted);font-size:12px;font-weight:750;margin-top:4px;line-height:1.35}
 .club-meta{display:flex;gap:8px;margin-top:13px;flex-wrap:wrap}
 .club-meta span{
   height:26px;
@@ -122,21 +122,13 @@ button{cursor:pointer}
   font-size:12px;
   font-weight:950;
 }
-.credit-card{
-  display:flex;
-  gap:12px;
-  align-items:center;
-  margin-top:0;
-}
-.copyright-mark{
-  width:36px;
-  height:36px;
-  border-radius:50%;
-  display:grid;
-  place-items:center;
-  border:2px solid #0f172a;
-  color:#0f172a;
-  font-weight:950;
+.site-credit{
+  margin:0;
+  padding:0 6px 4px;
+  color:#94a3b8;
+  font-size:12px;
+  font-weight:750;
+  line-height:1.5;
 }
 .main{padding:28px 42px 58px;min-width:0}
 .utilitybar{
@@ -163,6 +155,34 @@ button{cursor:pointer}
 .crumb strong{color:#0f172a}
 .crumb span:last-child{font-size:13px}
 .utility-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.icon-btn{
+  width:40px;height:40px;border-radius:14px;
+  border:1px solid var(--border);
+  background:#fff;
+  display:grid;place-items:center;
+  box-shadow:0 8px 16px rgba(15,23,42,.04);
+}
+.profile-btn{
+  height:42px;
+  border-radius:999px;
+  border:1px solid #cfe1ff;
+  background:#fff;
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  padding:0 13px 0 5px;
+  color:#0f172a;
+  font-weight:950;
+  box-shadow:0 10px 20px rgba(29,107,255,.08);
+}
+.profile-avatar{
+  width:32px;height:32px;border-radius:50%;
+  display:grid;place-items:center;
+  color:#fff;
+  background:linear-gradient(135deg,var(--primary),var(--primary-2));
+  font-size:13px;
+}
+.profile-name{font-size:14px}
 .chip{
   height:38px;
   padding:0 14px;
@@ -221,9 +241,9 @@ button{cursor:pointer}
 .hero{
   min-height:318px;
   display:grid;
-  grid-template-columns:190px 1fr;
-  gap:28px;
-  align-items:center;
+  grid-template-columns:205px minmax(0,1fr);
+  gap:30px;
+  align-items:start;
 }
 .hero-illus{
   width:178px;
@@ -237,6 +257,8 @@ button{cursor:pointer}
   font-size:62px;
   position:relative;
   border:1px solid #d9e8fb;
+  align-self:start;
+  margin-top:18px;
 }
 .hero-illus::after{
   content:"ODF";
@@ -261,7 +283,7 @@ button{cursor:pointer}
 .hero h1{
   font-size:43px;
   line-height:1.12;
-  margin:12px 0;
+  margin:8px 0 12px;
   letter-spacing:-.065em;
 }
 .lead{
@@ -274,6 +296,10 @@ button{cursor:pointer}
 }
 .muted{color:var(--muted);font-weight:750;line-height:1.7}
 .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:24px}
+.hero-metrics{grid-template-columns:repeat(2,minmax(0,1fr));max-width:470px}
+.hero-metrics .stat{min-height:70px;padding:13px 14px}
+.hero-metrics .stat strong{font-size:19px}
+.hero-metrics .stat span:last-child{font-size:12px;white-space:normal}
 .stat{
   border:1px solid var(--border);
   border-radius:17px;

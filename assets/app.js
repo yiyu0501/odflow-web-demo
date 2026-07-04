@@ -20,15 +20,52 @@ const pageMeta = {
 };
 
 const STORAGE_KEYS = {
-  docs: "odflow_generated_documents_v3",
-  downloads: "odflow_template_downloads_v3"
+  docs: "odflow_generated_documents_v4",
+  downloads: "odflow_template_downloads_v4"
 };
+
+const REMOTE_REPO = "yiyu0501/SA_ODFlow";
+let remoteRepoStats = null;
+let remoteRepoLoaded = false;
 
 const evaluationRequirements = [
   { key: "activity_result_report", label: "活動成果報告", category: "社團活動", matchDoc: ["活動成果報告"], matchTemplate: ["activity_result_report"] },
   { key: "income_expense_statement", label: "經費收支表", category: "財務", matchDoc: ["經費收支表", "收支"], matchTemplate: ["income_expense_statement"] },
   { key: "meeting_minutes", label: "會議紀錄", category: "行政", matchDoc: ["會議紀錄"], matchTemplate: ["meeting_minutes"] }
 ];
+
+
+async function syncRemoteRepoStats(){
+  try{
+    const res = await fetch(`https://api.github.com/repos/${REMOTE_REPO}/git/trees/main?recursive=1`, {
+      headers: { "Accept": "application/vnd.github+json" }
+    });
+    if(!res.ok) throw new Error(`GitHub API ${res.status}`);
+    const data = await res.json();
+    const paths = (data.tree || []).filter(item => item.type === "blob").map(item => item.path);
+    const odfFiles = paths.filter(path => /\.(odt|ods)$/i.test(path));
+    const generatedFiles = odfFiles.filter(path => /(^|\/)(data\/generated|generated|documents|outputs|downloads)\//i.test(path));
+    const templateLikeFiles = odfFiles.filter(path => /(template|blank|範本|downloads)/i.test(path));
+    remoteRepoStats = {
+      fileCount: paths.length,
+      odfFiles: odfFiles.length,
+      generatedFiles: generatedFiles.length,
+      templateLikeFiles: templateLikeFiles.length,
+      checkedAt: new Date().toISOString()
+    };
+  }catch(err){
+    remoteRepoStats = {error: String(err && err.message ? err.message : err), checkedAt: new Date().toISOString()};
+  }finally{
+    remoteRepoLoaded = true;
+    refreshSidebarMeta();
+    if(typeof render === "function") render();
+  }
+}
+
+function remoteNumber(key, fallback){
+  if(remoteRepoStats && typeof remoteRepoStats[key] === "number") return remoteRepoStats[key];
+  return fallback;
+}
 
 let currentPage = location.hash.replace("#","") || "home";
 let currentGenerate = generateTemplates[0] || {schema:"活動企劃書", name:"活動企劃書"};
@@ -115,6 +152,9 @@ function getStats(){
   const downloadable = templates.filter(t => !!t.file);
   const odfTemplates = templates.filter(t => ["ODT","ODS"].includes(t.fmt));
   const evalState = computeEvaluation();
+  const remoteOdfFiles = remoteNumber("odfFiles", null);
+  const remoteGeneratedFiles = remoteNumber("generatedFiles", null);
+  const remoteTemplateLikeFiles = remoteNumber("templateLikeFiles", null);
   return {
     docs: docs.length,
     downloads: downloads.length,
@@ -125,7 +165,12 @@ function getStats(){
     evalPercent: evalState.percent,
     evalMissing: evalState.missing,
     evalCompleted: evalState.completed,
-    evalTotal: evalState.total
+    evalTotal: evalState.total,
+    remoteLoaded: remoteRepoLoaded,
+    remoteError: remoteRepoStats && remoteRepoStats.error,
+    remoteOdfFiles,
+    remoteGeneratedFiles,
+    remoteTemplateLikeFiles
   };
 }
 
@@ -192,11 +237,11 @@ function renderHome(){
           <div class="kicker">台灣學生社團 ODF 文件工作台</div>
           <h1>一站式社團<br>文件管理站</h1>
           <p class="lead">空白範本、文件填寫、預覽確認與評鑑整理集中在同一個工作台，讓社團行政不再散落各處。</p>
-          <div class="stat-row">
-            <div class="stat"><span>📄</span><div><strong>${stats.downloadable}</strong><span>可下載範本</span></div></div>
-            <div class="stat"><span>📝</span><div><strong>${stats.docs}</strong><span>已建立文件</span></div></div>
-            <div class="stat"><span>✅</span><div><strong>${stats.odfPercent}%</strong><span>ODF 格式</span></div></div>
-            <div class="stat"><span>📦</span><div><strong>${stats.evalPercent}%</strong><span>評鑑進度</span></div></div>
+          <div class="stat-row hero-metrics">
+            <div class="stat"><span>📄</span><div><strong>${stats.downloadable}</strong><span>本頁可下載範本</span></div></div>
+            <div class="stat"><span>📝</span><div><strong>${stats.docs}</strong><span>本頁已建立文件</span></div></div>
+            <div class="stat"><span>✅</span><div><strong>${stats.odfPercent}%</strong><span>本頁 ODF 格式</span></div></div>
+            <div class="stat"><span>📦</span><div><strong>${stats.evalPercent}%</strong><span>社團評鑑進度</span></div></div>
           </div>
         </div>
       </section>
@@ -209,7 +254,8 @@ function renderHome(){
           <div class="assessment-list">
             <div class="assessment-item"><div>⚠️ 待補佐證</div><span>${stats.evalMissing} 份</span></div>
             <div class="assessment-item"><div>✅ 已完成項目</div><span>${stats.evalCompleted} / ${stats.evalTotal}</span></div>
-            <div class="assessment-item"><div>📄 目前文件</div><span>${stats.docs} 份</span></div>
+            <div class="assessment-item"><div>📄 本頁文件</div><span>${stats.docs} 份</span></div>
+            <div class="assessment-item"><div>🔎 原專案 ODF</div><span>${stats.remoteLoaded ? (stats.remoteError ? "讀取失敗" : `${stats.remoteOdfFiles} 個`) : "偵測中"}</span></div>
             <button class="btn coral" data-go="evaluation">前往社團評鑑 →</button>
           </div>
         </div>
@@ -245,6 +291,7 @@ function renderDashboard(){
           <div class="assessment-item"><div>ODT 範本</div><span>${templates.filter(t=>t.fmt==="ODT").length} 份</span></div>
           <div class="assessment-item"><div>ODS 表格</div><span>${templates.filter(t=>t.fmt==="ODS").length} 份</span></div>
           <div class="assessment-item"><div>下載紀錄</div><span>${stats.downloads} 次</span></div>
+          <div class="assessment-item"><div>原專案 ODF 檔案</div><span>${stats.remoteLoaded ? (stats.remoteError ? "讀取失敗" : `${stats.remoteOdfFiles} 個`) : "偵測中"}</span></div>
         </div>
       </section>
     </div>`);
@@ -388,7 +435,7 @@ function renderEvaluation(){
         </div>
         <div class="assessment-list" style="margin-top:18px">
           <div class="assessment-item"><div>優先順序</div><span>成果 → 財務 → 行政</span></div>
-          <div class="assessment-item"><div>資料來源</div><span>localStorage / 範本清單</span></div>
+          <div class="assessment-item"><div>資料來源</div><span>本頁資料 / 原 repo 偵測</span></div>
         </div>
       </section>
     </div>`);
@@ -410,10 +457,10 @@ function renderSettings(){
         <div class="field"><label>製作者</label><input value="簡廷宇（Eric） © 2026"></div>
       </div>
       <div class="grid four" style="margin-top:22px">
-        ${kpi("目前文件",stats.docs,"已建立")}
+        ${kpi("本頁文件",stats.docs,"已建立")}
         ${kpi("範本下載",stats.downloads,"次")}
         ${kpi("可下載範本",stats.downloadable,"份")}
-        ${kpi("評鑑進度",`${stats.evalPercent}%`,"即時計算")}
+        ${kpi("原專案 ODF",stats.remoteLoaded ? (stats.remoteError ? "—" : stats.remoteOdfFiles) : "…","GitHub 偵測")}
       </div>
       <button class="btn secondary" id="clearData" style="margin-top:18px">清除本機展示資料</button>
     </section>`);
@@ -450,3 +497,4 @@ function render(){
 }
 
 setPage(currentPage);
+syncRemoteRepoStats();
